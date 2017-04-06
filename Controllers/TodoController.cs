@@ -34,22 +34,47 @@ namespace TodoApi.Controllers
             return new ObjectResult(item);
         }
 
-        // POST api/values
         [HttpPost]
-        public void Post([FromBody]string value)
+        public IActionResult Create([FromBody] TodoItem item)
         {
+            if (item == null) {
+                return BadRequest();
+            }
+
+            this.todoRepository.Add(item);
+
+            return CreatedAtRoute("GetTodo", new { id = item.Key }, item);
         }
 
-        // PUT api/values/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        public IActionResult Update(long id, [FromBody] TodoItem item)
         {
+            if (item == null || item.Key != id) {
+                return BadRequest();
+            }
+
+            var todoToBeUpdated = this.todoRepository.Find(id);
+            if (todoToBeUpdated == null) {
+                return NotFound();
+            }
+
+            todoToBeUpdated.IsComplete = item.IsComplete;
+            todoToBeUpdated.Name = item.Name;
+
+            this.todoRepository.Update(todoToBeUpdated);
+            return new NoContentResult();
         }
 
-        // DELETE api/values/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public IActionResult Delete(long id)
         {
+            var todoToBeDeleted = this.todoRepository.Find(id);
+            if (todoToBeDeleted == null) {
+                return NotFound();
+            }
+
+            this.todoRepository.Remove(id);
+            return new NoContentResult();
         }
     }
 }
